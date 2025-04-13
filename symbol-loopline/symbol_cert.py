@@ -1,5 +1,7 @@
 import os
 import click
+import configparser
+
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -10,6 +12,7 @@ from collections import namedtuple
 CertInfo = namedtuple("CertInfo", ["publicKey", "address", "validUntil"])
 
 def get_cert_info(network_type, cert_path):
+
     # ファイルが存在するか確認
     if not os.path.exists(cert_path):
         click.echo(f"Error: Certificate file does not exist at {cert_path}")
@@ -50,14 +53,21 @@ def get_cert_info(network_type, cert_path):
     )
     
 
-def show(target):
+def show(config_path, target_path):
+    # configファイルを読み込む
+    config = configparser.ConfigParser()
+    config.read(config_path)
+
+    # network.name の値を取得
+    network_name = config.get("network", "name")
+    
     # targetの末尾に/がある場合は削除
-    if target.endswith('/'):
-        target = target[:-1]
+    if target_path.endswith('/'):
+        target_path = target_path[:-1]
 
     # certInfoを取得
-    main_cert = get_cert_info("testnet", os.path.join(target, "keys/cert/ca.crt.pem"))
-    node_cert = get_cert_info("testnet", os.path.join(target, "keys/cert/node.crt.pem"))
+    main_cert = get_cert_info(network_name, os.path.join(target_path, "keys/cert/ca.crt.pem"))
+    node_cert = get_cert_info(network_name, os.path.join(target_path, "keys/cert/node.crt.pem"))
 
     # 結果を出力
     click.echo(f"Main Certificate:")
